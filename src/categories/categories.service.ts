@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Head, Header, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -16,12 +16,27 @@ export class CategoriesService {
     return createdCategory.save();
   }
 
-  async findAll(): Promise<Category[]> {
-    return this.categoryModel.find().exec();
+  async findAll() {
+    const limit = 8;
+    const skip = 0;
+    const count = await this.categoryModel.countDocuments({}).exec();
+    const page_total = Math.floor((count - 1) / limit) + 1;
+    const dataModel = await this.categoryModel
+      .find()
+      .limit(limit)
+      .skip(skip)
+      .exec();
+    const data = dataModel.map((record) => {
+      const category: any = record.toJSON();
+      category.id = category._id;
+      delete category._id;
+
+      return category;
+    });
+    return data;
   }
 
   async findOne(id: string): Promise<Category | null> {
-    console.log('======', id);
     return this.categoryModel.findOne({ _id: id }).exec();
   }
 
